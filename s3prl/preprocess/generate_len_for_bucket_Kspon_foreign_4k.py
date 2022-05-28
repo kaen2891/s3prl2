@@ -28,7 +28,7 @@ def get_preprocess_args():
     
     parser = argparse.ArgumentParser(description='preprocess arguments for any dataset.')
 
-    parser.add_argument('-i', '--input_data', default='/home/kaen2891/workspace/ssl_ver2/', type=str, help='Path to your LibriSpeech directory', required=False)
+    parser.add_argument('-i', '--input_data', default='/Data/junewoo/raw_files/ssl_ver2/', type=str, help='Path to your LibriSpeech directory', required=False)
     parser.add_argument('-o', '--output_path', default='./data_len_for_bucket/', type=str, help='Path to store output', required=False)
     parser.add_argument('-a', '--audio_extension', default='.wav', type=str, help='audio file type (.wav / .flac / .mp3 / etc)', required=False)
     parser.add_argument('-n', '--name', default='ssl_ver2_len_for_bucket', type=str, help='Name of the output directory', required=False)
@@ -93,7 +93,8 @@ def main():
     elif 'timit' in args.input_data.lower():
         SETS = ['TRAIN', 'TEST']
     else:
-        SETS = ['KoSpeech_1000hour', 'command_sentence_adult', 'command_sentence_child', 'command_sentence_elder', 'foreign_sentence', 'free_sentence_adult', 'free_sentence_child', 'free_sentence_elder', 'NIKL_SEOUL']
+        SETS = ['KoSpeech_1000hour', 'command_sentence_adult', 'command_sentence_child', 'command_sentence_elder', 'foreign_sentence', 'free_sentence_adult', 'free_sentence_child', 'free_sentence_elder']
+        #SETS = ['KoSpeech_1000hour', 'foreign_sentence']
     # change the SETS list to match your dataset, for example:
     # SETS = ['train', 'dev', 'test']
     # SETS = ['TRAIN', 'TEST']
