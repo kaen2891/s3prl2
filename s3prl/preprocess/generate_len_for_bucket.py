@@ -28,10 +28,10 @@ def get_preprocess_args():
     
     parser = argparse.ArgumentParser(description='preprocess arguments for any dataset.')
 
-    parser.add_argument('-i', '--input_data', default='../LibriSpeech/', type=str, help='Path to your LibriSpeech directory', required=False)
-    parser.add_argument('-o', '--output_path', default='./data/', type=str, help='Path to store output', required=False)
-    parser.add_argument('-a', '--audio_extension', default='.flac', type=str, help='audio file type (.wav / .flac / .mp3 / etc)', required=False)
-    parser.add_argument('-n', '--name', default='len_for_bucket', type=str, help='Name of the output directory', required=False)
+    parser.add_argument('-i', '--input_data', default='/home/kaen2891/workspace/ssl_ver2/', type=str, help='Path to your LibriSpeech directory', required=False)
+    parser.add_argument('-o', '--output_path', default='./data_len_for_bucket/', type=str, help='Path to store output', required=False)
+    parser.add_argument('-a', '--audio_extension', default='.wav', type=str, help='audio file type (.wav / .flac / .mp3 / etc)', required=False)
+    parser.add_argument('-n', '--name', default='ssl_ver2_len_for_bucket', type=str, help='Name of the output directory', required=False)
     parser.add_argument('--n_jobs', default=-1, type=int, help='Number of jobs used for feature extraction', required=False)
 
     args = parser.parse_args()
@@ -93,7 +93,7 @@ def main():
     elif 'timit' in args.input_data.lower():
         SETS = ['TRAIN', 'TEST']
     else:
-        raise NotImplementedError
+        SETS = ['KoSpeech_1000hour', 'command_sentence_adult', 'command_sentence_child', 'command_sentence_elder', 'foreign_sentence', 'free_sentence_adult', 'free_sentence_child', 'free_sentence_elder']
     # change the SETS list to match your dataset, for example:
     # SETS = ['train', 'dev', 'test']
     # SETS = ['TRAIN', 'TEST']
