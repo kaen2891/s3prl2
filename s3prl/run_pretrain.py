@@ -26,7 +26,6 @@ import numpy as np
 from pretrain.runner import Runner
 from utility.helper import override
 
-
 ######################
 # PRETRAIN ARGUMENTS #
 ######################
