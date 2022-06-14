@@ -81,7 +81,7 @@ s_v_script = sorted(glob(valid_path+'/*.script'))
 move2(s_t_script, target_train_path)
 move2(s_v_script, target_valid_path)
 
-exit()
+
 
 
 train_csv = os.path.join(train_path, 'data_list.csv')
