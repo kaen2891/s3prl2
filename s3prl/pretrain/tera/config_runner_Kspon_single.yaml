@@ -1,6 +1,6 @@
 runner:
-  #n_epochs: 100
-  n_epochs: -1
+  n_epochs: 100
+  #n_epochs: -1
   total_steps: 202025
   #total_steps: -1
   gradient_clipping: 5.0
@@ -20,7 +20,7 @@ optimizer:
 pretrain_expert:
   datarc:
     num_workers: 16
-    train_batch_size: 64
+    train_batch_size: 16
     max_timestep: -200 # Max length for audio feature (0 for no restriction, negative value to set minimum timestep)
     #libri_root: '/media/andi611/1TBSSD/LibriSpeech/' # If raw libri data is provided, use on-the-fly feature extraction, else use the pre-extracted features under `file_path`
     libri_root: '/home/kaen2891/workspace/ssl_ver2/'

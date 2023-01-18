@@ -1,8 +1,8 @@
 runner:
-  #n_epochs: 100
   n_epochs: -1
-  total_steps: 202025
-  #total_steps: -1
+  #n_epochs: -1
+  total_steps: 808050
+  #total_steps: 23304975
   gradient_clipping: 5.0
   gradient_accumulate_steps: 4
 
@@ -20,7 +20,7 @@ optimizer:
 pretrain_expert:
   datarc:
     num_workers: 16
-    train_batch_size: 64
+    train_batch_size: 16
     max_timestep: -200 # Max length for audio feature (0 for no restriction, negative value to set minimum timestep)
     #libri_root: '/media/andi611/1TBSSD/LibriSpeech/' # If raw libri data is provided, use on-the-fly feature extraction, else use the pre-extracted features under `file_path`
     libri_root: '/home/kaen2891/workspace/ssl_ver2/'
@@ -28,4 +28,8 @@ pretrain_expert:
     file_path: '/home/kaen2891/workspace/asr2/s3prl/s3prl/preprocess/data_len_for_bucket/ssl_ver2_len_for_bucket'
     #sets: ['train-clean-100', 'train-clean-360', 'train-other-500'] # can be the subset of ['train-clean-100', 'train-clean-360', 'train-other-500']
     #sets: ['KoSpeech_1000hour', 'NIKL_SEOUL', 'command_sentence_adult', 'command_sentence_child', 'command_sentence_elder', 'foreign_sentence', 'free_sentence_adult', 'free_sentence_child', 'free_sentence_elder']
+    #sets: ['foreign_sentence']
+    #sets: ['command_sentence_adult']
+    #sets: ['KoSpeech_1000hour', 'foreign_sentence', 'command_sentence_adult', 'command_sentence_child', 'command_sentence_elder']
+    #sets: ['KoSpeech_1000hour', 'command_sentence_adult', 'command_sentence_child', 'command_sentence_elder', 'foreign_sentence', 'free_sentence_adult', 'free_sentence_child', 'free_sentence_elder']
     sets: ['KoSpeech_1000hour']
