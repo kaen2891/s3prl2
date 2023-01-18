@@ -69,36 +69,25 @@ def generate_masked_acoustic_model_data(spec, config):
     with torch.no_grad():
 
         # Start
-        
-        #print('spec', len(spec), spec[0].size(), spec[1].size())
         if len(spec) == 2: # if self.duo_feature: dataloader will output `source_spec` and `target_spec`
             spec_masked = spec[0]
             spec_target = spec[1]
-            #print('len2') # coming here
         elif len(spec) == 1:
             spec_masked = spec[0] # (batch_size, seq_len, feat_dim)
             spec_target = copy.deepcopy(spec[0]) # (batch_size, seq_len, feat_dim)
-            #print('len1')
         else:
             raise ValueError
-
-        #print('spec_masked', spec_masked.size()) # batch, time, 80
-
 
         # Record length for each uttr
         spec_len = (spec_target.sum(dim=-1) != 0).long().sum(dim=-1).tolist()
         batch_size = spec_target.shape[0]
         seq_len = spec_target.shape[1]
-        #print('spec_masked {} spec_target {}'.format(spec_masked.size(), spec_target.size()))
-        #print(spec_len, batch_size, seq_len)
-
         
         pos_enc = fast_position_encoding(seq_len, config['position_encoding_size']) # (seq_len, position_encoding_size)
         mask_label = torch.zeros_like(spec_target, dtype=torch.uint8) \
                      if config['mask_proportion'] != 0 or config['mask_frequency'] != 0 \
                      else torch.ones_like(spec_target, dtype=torch.uint8)
         attn_mask = torch.ones((batch_size, seq_len)) # (batch_size, seq_len)
-        #print('mask_label {} attn_mask {}'.format(mask_label.size(), attn_mask.size()))
 
         for idx in range(batch_size):
             # zero vectors for padding dimension
@@ -128,16 +117,15 @@ def generate_masked_acoustic_model_data(spec, config):
                 # determine whether to mask / random / or do nothing to the frame
                 dice = random.random()
                 # mask to zero
-                if dice < 0.9:
+                if dice < 0.8:
                     spec_masked[idx, chosen_intervals, :] = 0
-                
                 # replace to random frames
                 
-                #elif dice >= 0.8 and dice < 0.9:
-                #    random_starts = torch.randperm(valid_start_max + 1)[:proportion]
-                #    random_intervals = _starts_to_intervals(random_starts, mask_consecutive)
-                #    spec_masked[idx, chosen_intervals, :] = spec_masked[idx, random_intervals, :]
-
+                elif dice >= 0.8 and dice < 0.9:
+                    random_starts = torch.randperm(valid_start_max + 1)[:proportion]
+                    random_intervals = _starts_to_intervals(random_starts, mask_consecutive)
+                    spec_masked[idx, chosen_intervals, :] = spec_masked[idx, random_intervals, :]
+                
                 # do nothing
                 else:
                     pass
@@ -151,21 +139,17 @@ def generate_masked_acoustic_model_data(spec, config):
                 rand_bandwidth = random.randint(0, max_width)
                 chosen_starts = torch.randperm(spec_masked.shape[2] - rand_bandwidth)[:1]
                 chosen_intervals = _starts_to_intervals(chosen_starts, rand_bandwidth)
-                
-                #print('max_width {} rand_bandwidth {}'.format(max_width, rand_bandwidth))
-                #print('chosen_starts {} intervals {}'.format(chosen_starts, chosen_intervals))
-                #print('freq chosen_intervals', chosen_intervals)
                 spec_masked[idx, :, chosen_intervals] = 0
                 
                 # the gradients will be calculated on chosen frames
                 mask_label[idx, :spec_len[idx], chosen_intervals] = 1   
 
-            if config['noise_proportion'] > 0:
-                # noise augmentation
-                dice = random.random()
-                if dice < config['noise_proportion']:
-                    noise_sampler = torch.distributions.Normal(0, 0.2)
-                    spec_masked[idx] += noise_sampler.sample(spec_masked[idx].shape).to(device=spec_masked[idx].device)
+        if config['noise_proportion'] > 0:
+            # noise augmentation
+            dice = random.random()
+            if dice < config['noise_proportion']:
+                noise_sampler = torch.distributions.Normal(0, 0.2)
+                spec_masked += noise_sampler.sample(spec_masked.shape).to(device=spec_masked.device)
         
         valid_batchid = mask_label.view(batch_size, -1).sum(dim=-1).nonzero(as_tuple=False).view(-1)
         spec_masked = spec_masked.to(dtype=torch.float32)[valid_batchid]

@@ -18,7 +18,6 @@ from torch.nn.utils.rnn import pad_sequence
 import torchaudio
 #-------------#
 from pretrain.mockingjay.task import generate_masked_acoustic_model_data
-from pretrain.mockingjay.task_sp import generate_masked_acoustic_model_data_sp
 from pretrain.bucket_dataset import FeatDataset
 
 
@@ -44,10 +43,7 @@ class KaldiAcousticDataset(FeatDataset):
         # Load acoustic feature and pad
         x_batch = [self._sample(self._load_feat(x_file)) for x_file in self.X[index]]
         x_pad_batch = pad_sequence(x_batch, batch_first=True)
-        if self.task_config['s_p']:
-            return generate_masked_acoustic_model_data_sp(spec=(x_pad_batch,), config=self.task_config)        
-        else:
-            return generate_masked_acoustic_model_data(spec=(x_pad_batch,), config=self.task_config)
+        return generate_masked_acoustic_model_data(spec=(x_pad_batch,), config=self.task_config)
 
 
 class OnlineAcousticDataset(FeatDataset):
@@ -81,11 +77,8 @@ class OnlineAcousticDataset(FeatDataset):
         if self.libri_root is not None:
             x_pad_batch = x_pad_batch.unsqueeze(1) # (batch_size, channel=1, seq_len)
             feat_list = self.extracter(x_pad_batch)
-        if self.task_config['s_p']:
-            return generate_masked_acoustic_model_data_sp(feat_list, config=self.task_config)        
-        else:
-            return generate_masked_acoustic_model_data(feat_list, config=self.task_config)
-        
+        return generate_masked_acoustic_model_data(feat_list, config=self.task_config)
+
     def __getitem__(self, index):
         # Load acoustic feature and pad
         x_batch = [self._sample(self._load_feat(x_file)) for x_file in self.X[index]]
