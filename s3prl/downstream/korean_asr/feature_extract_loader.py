@@ -65,11 +65,8 @@ class SpectrogramDataset(Dataset):
 # just only one batch
 
 def _collate_fn(batch):
-    #print('batch', batch)
     batch = sorted(batch, key=lambda sample: sample[0].size(-1), reverse=True)
-    #print('batch', batch)
     seq_lengths    = [s[0].size(-1) for s in batch]
-    #print('seq_lengths', seq_lengths)
     
     max_seq_size = max(seq_lengths)
         
@@ -86,7 +83,7 @@ def _collate_fn(batch):
         seqs[x].narrow(0, 0, len(tensor)).copy_(tensor)
         targets.append(target)
 
-    seq_lengths = torch.IntTensor(seq_lengths)    
+    seq_lengths = torch.IntTensor(seq_lengths)
     return seqs.squeeze(), targets
 
 

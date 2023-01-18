@@ -28,7 +28,8 @@ from glob import glob
 def get_pretrain_args():
 
     parser = argparse.ArgumentParser(description='Downstream hyperparameters')
-    parser.add_argument('--input_dir', default='/NasData/junewoo/', type=str, metavar='PATH')
+    parser.add_argument('--input_dir', default='/NasData/home/junewoo/raw_dataset/speech_recognition/korean_speech_dataset/asr_dataset/foreign_sentence/', type=str, metavar='PATH')
+    parser.add_argument('--input_feat_num', default='1', type=str, metavar='PATH')
     parser.add_argument('--save_feature_dir', default='/NasData/junewoo/', type=str, metavar='PATH')
     parser.add_argument('--batch_size', type=int, default=4)
     parser.add_argument('--seed', type=int, default=2891)
@@ -48,7 +49,7 @@ def get_pretrain_args():
     
     args = parser.parse_args()
     
-    new_args = dict(input_feature=args.input_dir, feature_save_dir=args.save_feature_dir, batch_size=args.batch_size, seed=args.seed, max_sequence_length=args.max_sequence_length)    
+    new_args = dict(input_feature=args.input_dir, input_num=args.input_feat_num, feature_save_dir=args.save_feature_dir, batch_size=args.batch_size, seed=args.seed, max_sequence_length=args.max_sequence_length)    
             
     sys_config = dict(workers=args.workers, world_size=args.world_size, rank=args.rank, dist_url=args.dist_url, dist_backend=args.dist_backend,
         pretrain_resume=args.pretrain_resume, pretrained_model_name=args.model_name, device=args.device)
@@ -114,20 +115,20 @@ def main_worker(gpu, ngpus_per_node, args, sys_config):
     pretrained_model = torch.nn.parallel.DistributedDataParallel(upstream, device_ids=[sys_config['device']])
         
        
-    TRAIN_PATH = os.path.join(args['input_feature'], 'KoSpeech_1000hour')    
-    VALID_PATH = os.path.join(args['input_feature'], 'valid_1000hour')
+    TRAIN_PATH = os.path.join(args['input_feature'], 'Training', args['input_num'])    
+    VALID_PATH = os.path.join(args['input_feature'], 'Validation', args['input_num'])
     
-    train_save_path = os.path.join(args['feature_save_dir'], 'KoSpeech_1000hour')
-    valid_save_path = os.path.join(args['feature_save_dir'], 'valid_1000hour')
+    train_save_path = os.path.join(args['feature_save_dir'], 'Training', args['input_num'])
+    valid_save_path = os.path.join(args['feature_save_dir'], 'Validation', args['input_num'])
     
     if not os.path.exists(train_save_path):
-        os.makedirs(train_save_path, exist_ok=True)
+        os.makedirs(train_save_path)
     
     if not os.path.exists(valid_save_path):
-        os.makedirs(valid_save_path, exist_ok=True)
+        os.makedirs(valid_save_path)
     
-    train_wavs = sorted(glob(os.path.join(TRAIN_PATH, '*.wav')))
-    valid_wavs = sorted(glob(os.path.join(VALID_PATH, '*.wav')))
+    train_wavs = sorted(glob(os.path.join(TRAIN_PATH, '*', '*.wav')))
+    valid_wavs = sorted(glob(os.path.join(VALID_PATH, '*', '*.wav')))
     
     print('number of train wav {}, number of valid wav {}'.format(len(train_wavs),len(valid_wavs)))
             
@@ -147,7 +148,7 @@ def main_worker(gpu, ngpus_per_node, args, sys_config):
         
        
     train_sampler.set_epoch(1)        
-    train(args, pretrained_model, train_save_path, train_loader, sys_config)
+    #train(args, pretrained_model, train_save_path, train_loader, sys_config)
     print('training finished')
     synchronize()        
     
