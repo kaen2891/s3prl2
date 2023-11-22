@@ -157,123 +157,17 @@ class Runner():
         #print('pbar_epoch', pbar_epoch)
         
 
+        max_list = []
         while pbar.n < pbar.total:
             #for data in tqdm(dataloader, dynamic_ncols=True, desc='train'):
             for ii, data in enumerate(tqdm(dataloader, dynamic_ncols=True, desc='train')):
                 # try/except block for forward/backward
-                #print('ii is', ii)
-                try:
-                    if pbar.n >= pbar.total:
-                        break
-                    global_step = pbar.n + 1
+                max_list.append(torch.max(data[-1]))
+                print(max(max_list))
 
-                    with torch.cuda.amp.autocast(enabled=amp):
-                        loss, records = self.upstream(
-                            data,
-                            records=records,
-                            global_step=global_step,
-                            log_step=self.config['runner']['log_step'],
-                        )
-
-                    if gradient_accumulate_steps > 1:
-                        loss = loss / gradient_accumulate_steps
-                    if self.args.multi_gpu:
-                        loss = loss.sum()
-                    if amp:
-                        scaler.scale(loss).backward()
-                    else:
-                        loss.backward()
-
-                except RuntimeError as e:
-                    if 'CUDA out of memory' in str(e):
-                        print(f'[Runner] - CUDA out of memory at step {global_step}')
-                        torch.cuda.empty_cache()
-                        optimizer.zero_grad()
-                        continue
-                    else:
-                        raise
-
-                # record loss
-                all_loss += loss.item()
-                del loss
-                
-                # whether to accumulate gradient
-                backward_steps += 1
-                if backward_steps % gradient_accumulate_steps > 0:
-                    continue
-                    
-                # unscale
-                if amp:
-                    scaler.unscale_(optimizer)
-
-                # gradient clipping
-                grad_norm = torch.nn.utils.clip_grad_norm_(self.upstream.model.parameters(), self.config['runner']['gradient_clipping'])
-                if math.isnan(grad_norm):
-                    print(f'[Runner] - Error : grad norm is NaN at global step {global_step}')
-
-                # optimize
-                if amp:
-                    scaler.step(optimizer)
-                    scaler.update()
-                elif not math.isnan(grad_norm):
-                    optimizer.step()
-
-                self.upstream.on_before_zero_grad()
-                optimizer.zero_grad()
-
-                # adjust learning rate
-                if scheduler:
-                    scheduler.step()
-
-                # logging
-                if global_step % self.config['runner']['log_step'] == 0 or pbar.n == pbar.total -1:
-                    # log loss
-                    self.logger.add_scalar(f'{prefix}loss', all_loss, global_step=global_step)
-                    # log lr
-                    if hasattr(optimizer, 'get_lr'):
-                        self.logger.add_scalar(f'{prefix}lr', optimizer.get_lr()[0], global_step=global_step)
-                    else:
-                        self.logger.add_scalar(f'{prefix}lr', self.config['optimizer']['lr'], global_step=global_step)
-                    # log norm
-                    self.logger.add_scalar(f'{prefix}gradient-norm', grad_norm, global_step=global_step)
-
-                    # log customized contents
-                    self.upstream.log_records(
-                        records=records,
-                        logger=self.logger,
-                        prefix=prefix,
-                        global_step=global_step,
-                    )
-                    records = defaultdict(list)
-
-                if global_step % self.config['runner']['save_step'] == 0 or pbar.n == pbar.total -1:
-                    def check_ckpt_num(directory):
-                        max_keep = self.config['runner']['max_keep']
-                        ckpt_pths = glob.glob(f'{directory}/states-*.ckpt')
-                        if len(ckpt_pths) >= max_keep:
-                            ckpt_pths = sorted(ckpt_pths, key=lambda pth: int(pth.split('-')[-1].split('.')[0]))
-                            for ckpt_pth in ckpt_pths[:len(ckpt_pths) - max_keep + 1]:
-                                os.remove(ckpt_pth)
-                    check_ckpt_num(self.args.expdir)
-
-                    all_states = {
-                        'Optimizer': optimizer.state_dict(),
-                        'Step': pbar.n,
-                        'Args': self.args,
-                        'Config': self.config,
-                    }
-                    all_states = self.upstream.add_state_to_save(all_states)
-
-                    if scheduler:
-                        all_states['Scheduler'] = scheduler.state_dict()
-                    
-                    name = f'states-epoch-{n_epochs}.ckpt' if pbar.n == pbar.total -1 and n_epochs > 0 else \
-                           f'states-{global_step}.ckpt'
-                    save_path = os.path.join(self.args.expdir, name)
-                    tqdm.write(f'[Runner] - Save the checkpoint to: {save_path}')
-                    torch.save(all_states, save_path)
-                
-                all_loss = 0      
+                      
                 pbar.update(1)
 
         pbar.close()
+        print(max(max_list))
+        

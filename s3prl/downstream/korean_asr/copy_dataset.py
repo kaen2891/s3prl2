@@ -7,7 +7,7 @@ import librosa
 import soundfile as sf
 
 parser = argparse.ArgumentParser(description='copy')
-parser.add_argument('--start_dir', type=str, default='/NasData/home/junewoo/workspace/asr/mockingjay/downstream/dataset/')
+parser.add_argument('--start_dir', type=str, default='/NasData/home/junewoo/workspace/asr2/script/')
 parser.add_argument('--dest_dir', type=str, default='/Data~')
 args = parser.parse_args()
 

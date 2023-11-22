@@ -189,6 +189,7 @@ class Runner():
             **self.config,
             **vars(self.args)
         ).to(self.args.device)
+        print('model', model)
 
         return self._init_model(
             model = model,

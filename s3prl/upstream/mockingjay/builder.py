@@ -159,10 +159,11 @@ class TransformerBuilder(nn.Module):
 
     def process_input_data(self, feat):
         """Process input data for the model"""
-        
+        #print('in process, feat', feat.size()) # 1, 373, 80
         # add arbitary batch axis B if input `feat` has shape of TxD
         if len(feat.shape) == 2:
             feat = feat.unsqueeze(0)
+            #print('in len2 feat size', feat.size())
         # input `feat` should have shape BxTxD
         elif len(feat.shape) != 3:
             raise ValueError('Input argument `feat` has invalid shape: {}'.format(feat.shape))
@@ -191,9 +192,11 @@ class TransformerBuilder(nn.Module):
 
     def _forward(self, x):
 
+        #print('in forward, x', x.size()) # 1, 373, 80
         if self.permute_input:
             x = x.permute(1, 0, 2).contiguous() # (T, B, D) -> (B, T, D)
         input_len = x.shape[1]
+        #print('input_len', input_len) # 373
 
         # forward the whole sequence at once
         if self.max_input_length == 0 or input_len <= self.max_input_length:
@@ -283,15 +286,22 @@ class PretrainedTransformer(TransformerBuilder):
 
 
     def forward(self, x):
+        #print('input x', len(x), x, type(x))
         if self.extracter is not None:
             if 'kaldi' in self.config['audio']:
                 x = [self.extracter(x_i) for x_i in x]
-                x = pad_sequence(x, batch_first=True)
+                x = pad_sequence(x, batch_first=True) 
             else:
                 x = [self._normalize_wav_decibel(x_i) for x_i in x]
-                x_lens = [len(x_) for x_ in x]
-                x = pad_sequence(x, batch_first=True)
-                x = x.unsqueeze(1) # (batch_size, audio_len) -> (batch_size, 1, audio_len)
+                x_lens = [len(x_) for x_ in x] 
+                
+                x = pad_sequence(x, batch_first=True) # (1, B, T)
+                
+                if x.dim() == 3:
+                    x = torch.transpose(x, 1, 0) # (B, 1, T)
+                    x_lens = [x_.size(-1) for x_ in x] # T, T, T, T
+                else:
+                    x = x.unsqueeze(1) # (batch_size, audio_len) -> (batch_size, 1, audio_len)
                 x = self.extracter(x, wavs_len=x_lens)[0]
         if self.no_grad:
             with torch.no_grad():
@@ -326,7 +336,12 @@ class PretrainedTransformerWithHead(PretrainedTransformer):
                 x = [self._normalize_wav_decibel(x_i) for x_i in x]
                 x_lens = [len(x_) for x_ in x]
                 x = pad_sequence(x, batch_first=True)
-                x = x.unsqueeze(1) # (batch_size, audio_len) -> (batch_size, 1, audio_len)
+                
+                if x.dim() == 3:
+                    x = torch.transpose(x, 1, 0) # (B, 1, T)
+                    x_lens = [x_.size(-1) for x_ in x] # T, T, T, T
+                else:
+                    x = x.unsqueeze(1) # (batch_size, audio_len) -> (batch_size, 1, audio_len)
                 x = self.extracter(x, wavs_len=x_lens)[0]
         if self.no_grad:
             with torch.no_grad():

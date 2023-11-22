@@ -16,7 +16,7 @@ def _get_experts():
                     continue
 
                 full_package = f"{__package__}{_module_name}"
-                print(f'[{__name__}] Warning: can not import {full_package}: {str(e)}. Pass.')
+                #print(f'[{__name__}] Warning: can not import {full_package}: {str(e)}. Pass.')
                 continue
             
             globals()[_name] = getattr(_module, "UpstreamExpert")
